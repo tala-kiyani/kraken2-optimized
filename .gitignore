@@ -1,0 +1,24 @@
+# Compiled source files
+*.o
+src/build_db
+src/classify
+src/estimate_capacity
+src/dump_table
+src/lookup_accession_numbers
+*.so
+*.a
+
+# Executables
+kraken2
+kraken2-build
+kraken2-inspect
+
+# Build directories
+build/
+
+# Local scripts and logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
