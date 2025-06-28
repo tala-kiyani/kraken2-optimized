@@ -45,6 +45,89 @@ To install and run Kraken 2, your system needs to meet the following requirement
 
 ## Building a Database
 
+Before classifying sequences, you must build or download a Kraken 2 database. A database is a directory containing at least three primary files (`hash.k2d`, `opts.k2d`, `taxo.k2d`), but you only need to reference the directory name when running commands.
+
+This guide covers three main methods for creating a database.
+
+### 1\. Standard Database Build
+
+This is the easiest method and creates a comprehensive database. The standard database includes taxonomic information from NCBI, along with complete genomes for bacteria, archaea, and viruses from RefSeq, plus the human genome and a collection of known vectors (UniVec\_Core).
+
+To build the standard database, use the following command, replacing `$DBNAME` with your desired database directory path:
+
+```bash
+kraken2-build --standard --db $DBNAME
+```
+
+**Important Notes:**
+
+  * **Disk Space**: The build process requires approximately 100 GB of disk space. Most of this is for reference sequences and taxonomy files that can be removed after the build is complete using the `--clean` flag.
+  * **Multithreading**: This process can be very time-consuming. To speed it up, you can use multiple processor cores with the `--threads` option:
+    ```bash
+    kraken2-build --standard --threads 24 --db $DBNAME
+    ```
+
+### 2\. Building the Kraken 2 Paper Database
+
+The "Standard Database" build described above is the method used to generate the database for the Kraken 2 paper. To replicate the database used in the official publication, simply follow the steps in the "Standard Database Build" section. This ensures you are using the same reference libraries and build process.
+
+### 3\. Building a Custom Database (e.g., for GTDB)
+
+If the standard libraries do not meet your needs, you can build a custom database. This is ideal for using alternative taxonomies and genome collections like GTDB. The process involves three main steps:
+
+**Step 1: Install Taxonomy**
+
+First, you need a taxonomy. For the standard NCBI taxonomy, use this command:
+
+```bash
+kraken2-build --download-taxonomy --db $DBNAME
+```
+
+This downloads the NCBI taxonomy files (`names.dmp`, `nodes.dmp`) into the `$DBNAME/taxonomy/` directory. If you are using a completely custom taxonomy like GTDB, you would need to create correctly formatted `names.dmp` and `nodes.dmp` files and place them in this directory.
+
+**Step 2: Add Genomic Libraries**
+
+Next, add your reference sequences.
+
+  * **Add Custom FASTA files (e.g., GTDB genomes):**
+    You can add your own FASTA files to the library. Each sequence header must contain either a valid NCBI accession number or an explicit taxon ID using the format `kraken:taxid|XXX`.
+
+    To add a single file:
+
+    ```bash
+    kraken2-build --add-to-library your_genome.fna --db $DBNAME
+    ```
+
+    To add many files in a directory (for example, all GTDB `.fna` files):
+
+    ```bash
+    find /path/to/gtdb/genomes/ -name '*.fna' -print0 | xargs -0 -I{} -n1 kraken2-build --add-to-library {} --db $DBNAME
+    ```
+
+  * **Add Standard Libraries (Optional):**
+    You can also add pre-packaged libraries from NCBI (`archaea`, `bacteria`, `viral`, etc.) using the `--download-library` command. You can issue this command multiple times to add several libraries.
+
+    ```bash
+    kraken2-build --download-library viral --db $DBNAME
+    ```
+
+**Step 3: Build the Database**
+
+Once you have added all your desired taxonomy and library files, finalize the build with this command:
+
+```bash
+kraken2-build --build --db $DBNAME
+```
+
+Using the `--threads` option here is also highly recommended to reduce build time.
+
+#### **Database Clean-up**
+
+After a successful build, you can remove intermediate files to reduce the final disk usage of the database directory:
+
+```bash
+kraken2-build --clean --db $DBNAME
+```
 
 ## Basic Usage
 
