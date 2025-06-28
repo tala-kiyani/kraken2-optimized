@@ -43,6 +43,7 @@ To install and run Kraken 2, your system needs to meet the following requirement
 
 4.  [cite\_start](https://www.google.com/search?q=Optional) After installation, you may want to copy the main scripts (`kraken2`, `kraken2-build`, `kraken2-inspect`) into a directory in your `PATH` for easier access (e.g., `$HOME/bin`)[cite: 53].
 
+
 ## Building a Database
 
 Before classifying sequences, you must build or download a Kraken 2 database. A database is a directory containing at least three primary files (`hash.k2d`, `opts.k2d`, `taxo.k2d`), but you only need to reference the directory name when running commands.
@@ -61,98 +62,54 @@ kraken2-build --standard --db $DBNAME
 
 **Important Notes:**
 
-  * **Disk Space**: The build process requires approximately 100 GB of disk space. Most of this is for reference sequences and taxonomy files that can be removed after the build is complete using the `--clean` flag.
-  * **Multithreading**: This process can be very time-consuming. To speed it up, you can use multiple processor cores with the `--threads` option:
+  * **Disk Space**: The build process requires approximately 100 GB of disk space. This can be reduced after the build is complete using the `--clean` flag.
+  * **Multithreading**: To speed up the time-consuming build process, you can use multiple processor cores with the `--threads` option:
     ```bash
     kraken2-build --standard --threads 24 --db $DBNAME
     ```
 
-### 2\. Building the Kraken 2 Paper Database
+### 2\. Building the Strain-Exclusion Database (Kraken 2 Paper Method)
 
-This method outlines how to build the standard database using the automated scripts provided in the official Kraken 2 paper's experiment code repository. This process ensures that the exact same data sources and build parameters used in the publication are applied.
+This section describes how to build the specialized "strain-exclusion" database that was used for benchmarking in the original Kraken 2 paper. This process involves downloading reference genomes, selecting specific strains to exclude (for fair testing), and then building a database from the remaining sequences.
 
-Our approach is based on these scripts but is simplified to *only* build the database, without running the benchmarks for other classification tools.
+All scripts required for this process are provided in the `db_build_scripts/` directory of this repository, adapted from the official [kraken2-experiment-code repository](https://github.com/DerrickWood/kraken2-experiment-code).
 
-**Step-by-step guide:**
+**Step 1: Prerequisites**
 
-1.  **Clone the official experiment code repository:**
+The helper scripts are written in Perl and C++. You must compile the C++ utility first.
 
-    ```bash
-    git clone https://github.com/DerrickWood/kraken2-experiment-code.git
-    cd kraken2-experiment-code
-    ```
+```bash
+# Navigate to the Utilities directory
+cd db_build_scripts/Utilities/
 
-2.  **Build the database using the provided Makefile:**
-    The repository's `Makefile` contains targets to download all necessary data and build the database. To build the standard Kraken 2 database (equivalent to `--standard`), run the following command:
+# Compile the C++ program
+make
+# Return to the project root
+cd ../../
+```
 
-    ```bash
-    # This command will automatically download NCBI taxonomy, and genomes for
-    # bacteria, archaea, viruses, and human, then build the database.
-    make databases/k2_std_db
-    ```
+**Step 2: Prepare and Run the Build Process**
 
-3.  **Locate the database:**
-    After the process completes successfully, the database will be available in the `kraken2-experiment-code/databases/k2_std_db` directory. You can then use this path for the `--db` option in your classification tasks.
+The entire workflow, from downloading data to building the final database, is defined in the provided scripts. You will need to ensure the paths inside `db_build_scripts/BuildScripts/build_kraken2.bash` (specifically `working_root`) are configured for your system.
 
-**Note:** The `kraken2-experiment-code` repository is designed to reproduce all experiments from the paper, including running other tools like Centrifuge and CLARK. The commands listed here will only perform the steps necessary for building the Kraken 2 database and will not run the other tools' benchmarks.
+The main workflow is described in `db_build_scripts/README_DataGeneration.md`. It performs the following key actions:
+
+1.  Downloads genome and taxonomy data from NCBI.
+2.  Selects specific bacterial and viral strains to exclude for testing.
+3.  Generates a final reference FASTA file (`strain_excluded.fna`) with these strains removed.
+4.  Builds the final Kraken 2 database named `strex`.
+
+To execute the entire process, you can run the commands from `README_DataGeneration.md` followed by the build script. For simplicity, it is recommended to combine them into a master script.
+
+**Step 3: Locate the Final Database**
+
+After all steps are completed successfully, the final database will be located in the directory specified within the `build_kraken2.bash` script (by default, `/data/Databases/Kraken2/strex`). You can then use this path for the `--db` option in your classification tasks.
 
 ### 3\. Building a Custom Database (e.g., for GTDB)
 
 If the standard libraries do not meet your needs, you can build a custom database. This is ideal for using alternative taxonomies and genome collections like GTDB. The process involves three main steps:
 
-**Step 1: Install Taxonomy**
 
-First, you need a taxonomy. For the standard NCBI taxonomy, use this command:
-
-```bash
-kraken2-build --download-taxonomy --db $DBNAME
-```
-
-This downloads the NCBI taxonomy files (`names.dmp`, `nodes.dmp`) into the `$DBNAME/taxonomy/` directory. If you are using a completely custom taxonomy like GTDB, you would need to create correctly formatted `names.dmp` and `nodes.dmp` files and place them in this directory.
-
-**Step 2: Add Genomic Libraries**
-
-Next, add your reference sequences.
-
-  * **Add Custom FASTA files (e.g., GTDB genomes):**
-    You can add your own FASTA files to the library. Each sequence header must contain either a valid NCBI accession number or an explicit taxon ID using the format `kraken:taxid|XXX`.
-
-    To add a single file:
-
-    ```bash
-    kraken2-build --add-to-library your_genome.fna --db $DBNAME
-    ```
-
-    To add many files in a directory (for example, all GTDB `.fna` files):
-
-    ```bash
-    find /path/to/gtdb/genomes/ -name '*.fna' -print0 | xargs -0 -I{} -n1 kraken2-build --add-to-library {} --db $DBNAME
-    ```
-
-  * **Add Standard Libraries (Optional):**
-    You can also add pre-packaged libraries from NCBI (`archaea`, `bacteria`, `viral`, etc.) using the `--download-library` command. You can issue this command multiple times to add several libraries.
-
-    ```bash
-    kraken2-build --download-library viral --db $DBNAME
-    ```
-
-**Step 3: Build the Database**
-
-Once you have added all your desired taxonomy and library files, finalize the build with this command:
-
-```bash
-kraken2-build --build --db $DBNAME
-```
-
-Using the `--threads` option here is also highly recommended to reduce build time.
-
-#### **Database Clean-up**
-
-After a successful build, you can remove intermediate files to reduce the final disk usage of the database directory:
-
-```bash
-kraken2-build --clean --db $DBNAME
-```
 
 ## Basic Usage
 
