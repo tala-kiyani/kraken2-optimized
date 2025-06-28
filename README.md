@@ -69,7 +69,32 @@ kraken2-build --standard --db $DBNAME
 
 ### 2\. Building the Kraken 2 Paper Database
 
-The "Standard Database" build described above is the method used to generate the database for the Kraken 2 paper. To replicate the database used in the official publication, simply follow the steps in the "Standard Database Build" section. This ensures you are using the same reference libraries and build process.
+This method outlines how to build the standard database using the automated scripts provided in the official Kraken 2 paper's experiment code repository. This process ensures that the exact same data sources and build parameters used in the publication are applied.
+
+Our approach is based on these scripts but is simplified to *only* build the database, without running the benchmarks for other classification tools.
+
+**Step-by-step guide:**
+
+1.  **Clone the official experiment code repository:**
+
+    ```bash
+    git clone https://github.com/DerrickWood/kraken2-experiment-code.git
+    cd kraken2-experiment-code
+    ```
+
+2.  **Build the database using the provided Makefile:**
+    The repository's `Makefile` contains targets to download all necessary data and build the database. To build the standard Kraken 2 database (equivalent to `--standard`), run the following command:
+
+    ```bash
+    # This command will automatically download NCBI taxonomy, and genomes for
+    # bacteria, archaea, viruses, and human, then build the database.
+    make databases/k2_std_db
+    ```
+
+3.  **Locate the database:**
+    After the process completes successfully, the database will be available in the `kraken2-experiment-code/databases/k2_std_db` directory. You can then use this path for the `--db` option in your classification tasks.
+
+**Note:** The `kraken2-experiment-code` repository is designed to reproduce all experiments from the paper, including running other tools like Centrifuge and CLARK. The commands listed here will only perform the steps necessary for building the Kraken 2 database and will not run the other tools' benchmarks.
 
 ### 3\. Building a Custom Database (e.g., for GTDB)
 
