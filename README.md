@@ -107,25 +107,48 @@ After all steps are completed successfully, the final database will be located i
 
 ### 3\. Building the Custom GTDB Database
 
-This section provides instructions for building a custom Kraken 2 database using genomes and taxonomy from the Genome Taxonomy Database (GTDB). This is the primary method used for the novel analyses in this project.
+This section provides instructions for building a custom Kraken 2 database using representative genomes from the **Genome Taxonomy Database (GTDB)**. This process maps the GTDB genomes to the standard **NCBI taxonomy**, leveraging the `ncbi_taxid` provided in the GTDB metadata.
 
-All necessary scripts to download the data, process the taxonomy, and build the database are located in the `gtdb_build_scripts/` directory.
+All necessary custom scripts (`unzip_genome.sh`, `modify_headers.py`, etc.) and the master script (`build_gtdb_db.sh`) should be placed in a dedicated `gtdb_build_scripts/` directory within this repository.
 
-**Instructions:**
+#### Prerequisites
 
-The entire process is automated by a single master script. Simply navigate to the scripts directory and execute it. The script will handle downloading the correct GTDB release, preparing all necessary files, and building the final database.
+Ensure you have the following command-line tools installed: `wget`, `tar`, `gunzip`, `bash`, and `python3`.
+
+#### Instructions
+
+The entire workflow is automated by a single master script. Before running, please configure the necessary paths and parameters.
+
+**Step 1: Configure Build Parameters**
+
+Open the `gtdb_build_scripts/build_kraken2.bash` script and modify the following variables:
+
+  * `working_root`: Set this to the absolute path of your project directory.
+  * `--kmer-len X` and `--minimizer-len Y`: Replace `X` and `Y` with your desired integer values for the k-mer and minimizer lengths.
+
+**Step 2: Run the Automated Build**
+
+Once configured, execute the master script from the project's root directory. It will handle downloading data, decompressing files, rewriting FASTA headers, and building the final database.
 
 ```bash
-# Navigate to the GTDB build scripts directory
-cd gtdb_build_scripts/
+# Make the scripts executable
+chmod +x gtdb_build_scripts/*.sh
 
 # Run the master build script
-bash build_gtdb_db.sh
+bash gtdb_build_scripts/build_gtdb_db.sh
 ```
 
-Upon successful completion, the database will be created in a new directory (e.g., `gtdb_db_r207/`) inside the `gtdb_build_scripts/` folder. You can then use this path for the `--db` option in your classification tasks.
+#### The Automated Process
 
+The master script performs the following sequence of operations:
 
+1.  **Downloads Data**: Fetches the GTDB representative genomes (Release 220), GTDB metadata, and an NCBI-style taxonomy dump.
+2.  **Extracts Files**: Decompresses all downloaded archives.
+3.  **Decompresses Genomes**: Unzips the individual `.fna.gz` genome files.
+4.  **Rewrites FASTA Headers**: The `modify_headers.py` script reads the metadata, maps each genome's accession to its corresponding NCBI TaxID, and rewrites the headers of the FASTA files to include the `kraken:taxid|...` tag.
+5.  **Builds Database**: The `build_kraken2.bash` script uses the rewritten FASTA files and the NCBI taxonomy files to build the final Kraken 2 database with your specified parameters.
+
+Upon successful completion, the database will be created in the directory defined in the `build_kraken2.bash` script. You can then use this path for the `--db` option in your classification tasks.
 ## Basic Usage
 
 
