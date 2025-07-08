@@ -105,10 +105,25 @@ To execute the entire process, you can run the commands from `README_DataGenerat
 
 After all steps are completed successfully, the final database will be located in the directory specified within the `build_kraken2.bash` script (by default, `/data/Databases/Kraken2/strex`). You can then use this path for the `--db` option in your classification tasks.
 
-### 3\. Building a Custom Database (e.g., for GTDB)
+### 3\. Building the Custom GTDB Database
 
-If the standard libraries do not meet your needs, you can build a custom database. This is ideal for using alternative taxonomies and genome collections like GTDB. The process involves three main steps:
+This section provides instructions for building a custom Kraken 2 database using genomes and taxonomy from the Genome Taxonomy Database (GTDB). This is the primary method used for the novel analyses in this project.
 
+All necessary scripts to download the data, process the taxonomy, and build the database are located in the `gtdb_build_scripts/` directory.
+
+**Instructions:**
+
+The entire process is automated by a single master script. Simply navigate to the scripts directory and execute it. The script will handle downloading the correct GTDB release, preparing all necessary files, and building the final database.
+
+```bash
+# Navigate to the GTDB build scripts directory
+cd gtdb_build_scripts/
+
+# Run the master build script
+bash build_gtdb_db.sh
+```
+
+Upon successful completion, the database will be created in a new directory (e.g., `gtdb_db_r207/`) inside the `gtdb_build_scripts/` folder. You can then use this path for the `--db` option in your classification tasks.
 
 
 ## Basic Usage
