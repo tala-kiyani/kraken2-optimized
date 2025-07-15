@@ -2,7 +2,7 @@ TSV_FILE="GTDB/gtdb_genomes_reps_r220/genome_paths.tsv"
 
 BASE_DIR="GTDB/gtdb_genomes_reps_r220/"
 
-DEST_DIR="GTDB/gtdb_genomes_reps_r220/modified_gtdb_genomes"
+DEST_DIR="GTDB/modified_gtdb_genomes"
 while read -r filename directory; do
     FULL_PATH="$BASE_DIR$directory$filename"
 

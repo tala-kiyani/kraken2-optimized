@@ -9,9 +9,9 @@ META_FILES = [
     os.path.join(TSV_DIR, "arc53_metadata_r220.tsv")
 ]
 
-FASTA_DIR = "GTDB/gtdb_genomes_reps_r220/modified_gtdb_genomes"
+FASTA_DIR = "GTDB/modified_gtdb_genomes"
 
-OUT_DIR = "GTDB/gtdb_genomes_reps_r220/modified_gtdb_genomes_2"
+OUT_DIR = "GTDB/modified_gtdb_genomes_2"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 accession2taxid = {}
